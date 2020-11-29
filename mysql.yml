@@ -1,0 +1,55 @@
+---
+- name: "Mairadb-Server Installation & Management"
+  become: true
+  hosts: all
+  gather_facts: false
+  vars:
+    mysql_root: "mysqlroot123"
+    mysql_database: "wordpress"
+    mysql_user: "wpuser"
+    mysql_password: "wpuser123"
+
+  tasks:
+    - name: "Mariadb-Server - Package Installing"
+      yum:
+        name:
+          - mariadb-server
+          - MySQL-python
+        state: present
+            
+    - name: "Mariadb-Server - Service Restart/Enabling"
+      service:
+        name: mariadb
+        state: restarted
+        enabled: true
+            
+    - name: "Maiadb-Server - Updating Root Password"
+      ignore_errors: true
+      mysql_user:
+        login_user: root
+        login_password: ""
+        name: "root"
+        password: "{{ mysql_root }}"
+        host_all: yes
+
+    - name: "Removing anonymous users"
+      mysql_user:
+        login_user: root
+        login_password: "{{ mysql_root }}"
+        name: ""
+        state: absent
+        host_all: yes
+
+    - name: Creating Database"
+      mysql_db:
+        login_user: root
+        login_password: "{{ mysql_root }}"
+        name: "{{ mysql_database }}"
+
+    - name: Creating user"
+      mysql_user:
+        login_user: root
+        login_password: "{{ mysql_root }}"
+        name: "{{ mysql_user }}"
+        password: "{{ mysql_password }}"
+        priv: '{{ mysql_database }}.*:ALL'
